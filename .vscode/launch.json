@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-Spring1Application<spring1>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "net.kdigital.spring1.Spring1Application",
+            "projectName": "spring1",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

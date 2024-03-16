@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 친구 목록</title>
+</head>
+
+<body>
+    <h2>[ 전체 친구 목록 ]</h2>
+
+    <p th:if="${list.size() == 0}">목록이 없습니다.</p>
+    <div th:unless="${list.size() == 0}">
+        <ul th:each="friend, status : ${list}">
+            <li>번호: <span th:text="${status.count}"></span></li>
+            <li>이름: <span th:text="${friend.fname}"></span></li>
+            <li>나이: <span th:text="${friend.age}"></span></li>
+            <li>전화번호: <span th:text="${friend.phone}"></span></li>
+            <li>생년월일: <span th:text="${friend.birthday}"></span></li>
+            <li>성향: <span th:text="${friend.active} ? '외향적' : '내향적'"></span></li>
+            <!--타임리프는 서버에서 해석하고 JS는 클라이언트에서 해석해서 위치가 달라서 같이 사용해야할 때는 JS 파일로 따로 빼서 쓰는 것 지양-->
+            <!--HTML에서 같이 있으면 번역 가능하나 따로 스크립트에 있으면 해석하지 못하고 그대로 클라이언트로 가져가게됨-->
+            <div>
+                <!--사용자정의 속성: data(원하는속성명)=""-->
+                <!--타임리프가 해석해야하는 부분앞에는 th:붙이기-->
+                <!--각 삭제 버튼 속성을 다르게 해야 원하는 친구만 삭제 가능-->
+                <input type="button" class="deleteOne" th:data_no="${friend.friendSeq}" value="삭제">
+                <input type="button" class="updateOne" th:data_no="${friend.friendSeq}" value="수정">
+            </div>
+            <hr>
+        </ul>
+    </div>
+
+    <form id="sendOne" th:action="@{/deleteOne}" method="get">
+        <input type="hidden" id="friendSeq" name="friendSeq" value="">
+    </form>
+
+
+
+    <script th:inline="javascript"> // 자바 스크립트 안에 JQuery 들어가면 써줘야함
+        let delBtns = document.getElementsByClassName('deleteOne'); // 배열로 반환됨 
+        let updateBtns = document.getElementsByClassName('updateOne');
+
+        // 배열을 순회하며 모든 버튼에 이벤트 걸어줘야함
+        for (let i = 0; i < delBtns.length; ++i) {
+            delBtns[i].addEventListener('click', delFriend);
+            updateBtns[i].addEventListener('click', updateFriend);
+        };
+
+        // 친구정보 삭제 함수
+        function delFriend() {
+            let data_no = this.getAttribute("data_no");
+            document.getElementById('friendSeq').value = data_no; // 삭제하려는 정보를 input 태그 값에 넣기
+            document.getElementById('sendOne').action = 'deleteOne';
+            document.getElementById('sendOne').submit(); // form태그 가져와서 정보 보내
+        };
+
+        function updateFriend() {
+            let data_no = this.getAttribute("data_no");
+            document.getElementById('friendSeq').value = data_no;
+            document.getElementById('sendOne').action = 'updateOne';
+            document.getElementById('sendOne').submit();
+        };
+
+
+    </script>
+
+</body>
+
+</html>

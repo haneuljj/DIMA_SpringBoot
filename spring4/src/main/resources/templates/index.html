@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여러 종류의 데이터 전송</title>
+</head>
+<body>
+    <h2>여러 종류의 데이터 전송</h2>
+    <form action="regist" method="post">
+        <label for="fname">이름: </label>
+        <input type="text" name="fname" id="fname" placeholder="이름입력"> <br>
+
+        <label for="age">나이: </label>
+        <input type="number" name="age" id="age" placeholder="나이입력"> <br>
+
+        <label for="phone">전화번호: </label>
+        <input type="text" name="phone" id="phone" placeholder="전화번호입력"> <br>
+
+        <label for="birthday">생년월일: </label>
+        <input type="date" name="birthday" id="birthday"> <br>
+
+        <label for="active">성향:
+            <input type="radio" name="active" value="0">내향적 &nbsp;
+            <input type="radio" name="active" value="1" checked="checked">외향적 <br>
+        </label> <!--for와 id를 맞춰야하는데 두개의 인풋 타입에 같은 아이디를 쓸수없어서 label태그를 한꺼번에 묶기-->
+        <br><br>
+        <input type="submit" value="전송">
+        <input type="reset" value="취소">
+    </form>
+</body>
+</html>

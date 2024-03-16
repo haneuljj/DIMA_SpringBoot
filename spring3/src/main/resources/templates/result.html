@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!--model에 담긴 데이터를 HTML에서 꺼내쓰려면 thymeleaf 필요-->
+<html lang="ko" xmlns:th="http://thymeleaf.org"> <!--thymeleaf 문법 해석가능하도록-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parameter 전송 후</title>
+</head>
+<body>
+    <h2>Parameter 전송 후</h2>
+    <p>
+        입력된 이름: [[ ${name} ]]  <br> <!--thymeleaf 문법-->
+        입력된 나이: [[ ${age} ]]
+    </p>
+</body>
+</html>

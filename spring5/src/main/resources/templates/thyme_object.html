@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>객체의 표현</title>
+</head>
+<body>
+    <h2>[ 객체의 표현 ]</h2>
+    <div>
+        <a th:href="@{/}"> 
+            <img th:src="@{/images/home.png}" alt="logo">
+        </a>
+    </div>
+
+    <h3>10. 문자열 관련 데이터 처리</h3>
+    <ul>
+        <li>한글: <span th:text="${korean}"></span></li>
+        <li>문자열의 길이: <span th:text="${#strings.length(korean)}"></span> </li>
+        <li>문자열 연결: <span th:text="${#strings.concat(korean, '~', english, '~End!!!')}"></span> </li>
+        <br>
+        <li>영어: <span th:text="${english}"></span></li>
+        <li>isEmpty: <span th:text="${#strings.isEmpty(english)}"></span></li>
+        <li>문자열 포함: <span th:text="${#strings.contains(korean, '무궁화')}"></span></li>
+        <li>startsWith: <span th:text="${#strings.startsWith(english, 'have')}"></span></li>
+        <li>endsWith: <span th:text="${#strings.endsWith(english, 'anything')}"></span></li>
+        <br>
+        <li>문자열 시작위치: <span th:text="${#strings.indexOf(korean, '백두산')}"></span></li>
+        <li>특정 위치의 부분 문자열: <span th:text="${#strings.substring(english, 9, 14)}"></span></li>
+        <li>특정 위치의 뒤 부분 문자열: <span th:text="${#strings.substringAfter(korean, '백')}"></span></li>
+        <li>특정 위치의 앞 부분 문자열: <span th:text="${#strings.substringBefore(english, 'To')}"></span></li>
+        <li>치환: <span th:text="${#strings.replace(korean, '우리나라', '대한민국')}"></span></li>
+    </ul>
+</body>
+</html>

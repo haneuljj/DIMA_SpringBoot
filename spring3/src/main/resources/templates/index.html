@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>다양한 Parameter 처리</title>
+</head>
+<body>
+    <h2>다양한 Parameter 처리</h2>
+    <ul>
+        <li><a href="param/send?name=James&age=28">Parameter전달(Get)</a></li> <!--param/send 요청정보, ?뒤는 파라미터-->
+        <!--
+            thymeleaf 방식: 쿼리스트링과 함께 보내기
+            <li><a th:href="@{/param/send(name=James, age=28)}">Parameter전달(Get)</a></li>
+        -->
+        <li><a href="param/send">파라미터 없이 요청(Get)</a></li> <!--설정한 defaultValue값으로 데이터 보내짐-->
+        <!--<li><a th:href="@{/param/send}">파라미터 없이 요청(Get)</a></li>-->
+    </ul>
+    <hr>
+
+    <h3>폼을 이용한 데이터 전송</h3>
+    <form action="param/sendForm" method="get">
+        <label for="name">이름: </label> <!--for값과 id값 매칭-->
+        <input type="text" id="name" name="name" placeholder="이름을 입력하세요 "> <!--name 속성: 서버에서 변수명 역할-->
+        
+        <label for="age">나이: </label>
+        <input type="number" id="age" name="age" placeholder="나이를 입력하세요 ">
+
+        <input type="submit" value="전송">
+        <input type="reset" value="취소">
+    </form>
+</body>
+</html>
