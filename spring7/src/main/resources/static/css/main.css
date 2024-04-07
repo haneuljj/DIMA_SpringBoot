@@ -131,6 +131,12 @@ textarea:focus {
     border-color: #0dcaf0;
 }
 
+.btn-secondary {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
 /******************************
     테이블 모양 설정
 ******************************/
@@ -146,7 +152,6 @@ td {
     border: 1px solid lightgray;
     border-collapse: collapse;
 }
-
 
 th {
     background-color: #eee;

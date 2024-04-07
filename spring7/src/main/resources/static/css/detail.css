@@ -25,4 +25,46 @@ pre {
     height: 200px;
 }
 
+/* 댓글 입력 화면 설정 */
+div.reply-write {
+    width: 1000px;
+    margin: 10px auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
+input#replyText {
+    display: inline-block;
+    width: 850px;
+    height: 35px;
+}
+
+/* 좋아요 조회수 설정 */
+div.cnt {
+    margin: 0 auto;
+    width: 1000px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* 테이블 설정 */
+.replyText {
+    width: 500px;
+}
+.replyWriter {
+    width: 200px;
+}
+.replyDate {
+    width: 200px;
+}
+.replyBtns {
+    width: 100px;
+}
+
+div.replyCnt {
+    width:1000px;
+    margin: 5px auto;
+    margin-top: 20px;
+}

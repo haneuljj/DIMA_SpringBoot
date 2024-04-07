@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -23,18 +24,45 @@
             <div class="gnb">
                 <ul>
                     <!-- 인증이 되지 않은 사람-->
-                    <li><a th:href="@{/}">회원 가입</a></li>
-                    <li><a th:href="@{/}">로그인</a></li>
+                    <li sec:authorize="isAnonymous()"> <!--인증 안된 사람에게 보일 태그-->
+                        <a th:href="@{/user/join}">회원 가입</a>
+                    </li>
+                    <li sec:authorize="isAnonymous()">
+                        <a th:href="@{/user/login}">로그인</a>
+                    </li>
 
                     <!-- 인증이 된 사람-->
-                    <li><a th:href="@{/}">로그아웃</a></li>
+                    <li sec:authorize="isAuthenticated()"> <!--인증된 사람에게 보일 태그-->
+                        <a th:href="@{/user/logout}">[[ ${loginName} ]]님, 로그아웃</a>
+                    </li>
 
                     <!-- 인증과 관계 없음 -->
                     <li><a th:href="@{/board/boardList}">게시판</a></li>
+                    <li><a th:href="@{/predict}">머신러닝 붓꽃 예측</a></li>
                 </ul>
             </div>
         </div>
-    </div>
+
+        <!-- 인증관련정보 출력 (삭제)
+        ROLE_ADMIN 계정이면 아래 태그 출력
+        <h2 sec:authorize="hasRole('ROLE_ADMIN')">관리자</h2>
+        ROLE_USER 계정이면 아래 태그 출력
+        <h2 sec:authorize="hasRole('ROLE_USER')">인증된 사용자</h2>
+        ROLE_ANONYMOUS 계정이면 아래 태그 출력
+        <h2 sec:authorize="hasRole('ROLE_ANONYMOUS')">방문자</h2>
+
+
+        어느 권한이건 인증된 경우
+        <h2 sec:authorize="isAuthenticated()">인증완료됨</h2>
+        어느 권한이건 인증 안된 경우
+        <h2 sec:authorize="isAnonymous()">인증되지않음</h2>
+
+        인증시 사용된 userName 출력
+        Name: <h3 sec:authentication="name"></h3>
+        인증시 사용된 객체 정보 전체 출력
+        Principal: <h3 sec:authentication="principal"></h3> -->
+        
+    </div> <!--.container끝-->
 
 </body>
 

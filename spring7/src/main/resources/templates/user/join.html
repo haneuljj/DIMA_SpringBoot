@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입</title>
+    <!--fontawesome 사용 CDN 설정-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!--CSS 설정-->
+    <link rel="stylesheet" th:href="@{/css/user.css}">
+    <!--ajax-->
+    <script th:src="@{/script/jquery-3.7.1.min.js}"></script>
+    <script>
+        $(function(){
+            $("#userId").on('keyup', userIdCheck);
+        });
+
+        function userIdCheck(){
+            $('#submitBtn').prop("disabled", true);
+            let joinFlag = false;
+
+            let userId = $("#userId").val();
+
+            if(userId.trim().length < 3 || userId.trim().length > 5) {
+                $("#confirmID").css("color", "red");
+                $("#confirmID").text("3~5글자 사이로 입력하세요");
+                return;
+            }
+            $('#confirmID').text('');            
+
+            $.ajax({
+                url : "/user/userIdCheck"
+                , method: "POST"
+                , data : {"userId":userId}
+                , success : function(resp){
+                    if(!resp){
+                        $("#confirmID").css("color", "red");
+                        $('#submitBtn').prop("disabled", true);
+                        $("#confirmID").text("사용 불가한 아이디입니다");
+                        joinFlag = false;
+                    } 
+                    else {
+                        $("#confirmID").css("color", "blue");
+                        $('#submitBtn').attr("disabled", false);
+                        $("#confirmID").text("사용 가능한 아이디입니다");
+                        joinFlag = true;
+                        
+                    }
+                    
+                }
+            })
+        }
+    </script>
+</head>
+<!-- 아이디 / 패스워드 / 이름 / 이메일 -->
+<body>    
+    <div class="container">
+        <div class="logo">
+            <a th:href="@{/}"><img th:src="@{/images/logo2.png}" alt="logo"></a>
+            <h2>회원 가입</h2>
+        </div>
+    </div> <!-- .container 끝 -->
+
+    <div class="content">
+        <form th:action="@{/user/joinProc}" method="post">
+            <div class="section pointColor">
+                <div class="article">
+                    <ul>
+                        <li>
+                            <i class="fa-solid fa-fingerprint"></i>
+                            <input type="text" name="userId" id="userId" placeholder="ID 입력">
+                            <div id="confirmID" style="font-size: 0.8em;"></div>
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" name="userPwd" placeholder="Password 입력">
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-font"></i>
+                            <input type="text" name="userName" placeholder="이름 입력">
+                        </li>
+                        <li>
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" name="email" placeholder="이메일 입력">
+                        </li>
+                    </ul>
+
+                    <div class="btns">
+                        <input type="submit" id="submitBtn" value="회원가입" class="btn btn-primary" disabled="">
+                        <input type="reset" id="resetBtn" value="초기화" class="btn btn-secondary">
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </div> <!--.content-->
+</body>
+</html>

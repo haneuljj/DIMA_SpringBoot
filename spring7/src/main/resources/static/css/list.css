@@ -59,9 +59,26 @@ div.write {
         Pagination
 ******************************/
 nav.pagination {
-    width: 1000px;
-    margin: 20px auto;
     text-align: center;
+}
+
+.current {
+    font-weight: bolder;
+    color: rgb(109, 200, 236)
+}
+
+.page-no {
+    display: inline-block;
+    width:20px;
+    height: 30px;
+    padding: 0.4rem;
+    line-height: 1rem;
+    margin: 0px 2px;
+}
+
+.navi {
+    font-size: 1.4em;
+    width: 10px;
 }
 
 /* 제목과 첨부파일 정렬 설정 */

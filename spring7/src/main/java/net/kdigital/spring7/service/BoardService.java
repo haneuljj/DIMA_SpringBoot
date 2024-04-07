@@ -9,6 +9,9 @@ import java.util.Optional;
 import javax.swing.text.html.Option;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,32 +28,71 @@ import net.kdigital.spring7.util.FileService;
 @Slf4j
 @RequiredArgsConstructor
 public class BoardService {
+	@Value("${user.board.pageLimit}")
+	int pageLimit;
+
 	private final BoardRepository boardRepository;
 
 	// 업로드된 파일이 저장될 디렉토리 경로 읽어오기
 	@Value("${spring.servlet.multipart.location}")
 	String uploadPath;
 	
-	public List<BoardDTO> selectAll(String searchItem, String searchWord) {
+	public Page<BoardDTO> selectAll(Pageable pageable, String searchItem, String searchWord) {
+
+		// 사용자가 요청한 페이지 번호 반환
+		// page위치의 값이 0부터 시작하기 때문에 -1 필요. 사용자가 1페이지 요청시 DB에서는 0페이지 가져와야함
+		int page = pageable.getPageNumber() - 1; 
+
 		// Java Reflection 기능으로도 가능
-		List<BoardEntity> entityList = null;
+		// List<BoardEntity> entityList = null;
+		Page<BoardEntity> entityList = null;
+		
 		switch (searchItem) {
 			case "boardTitle":
-				entityList = boardRepository.findByBoardTitleContaining(searchWord, Sort.by(Sort.Direction.DESC, "createDate"));
+				entityList = boardRepository.findByBoardTitleContaining(
+					searchWord, 
+					PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "boardNum")));
 				break;
 			case "boardWriter":
-			entityList = boardRepository.findByBoardWriterContaining(searchWord, Sort.by(Sort.Direction.DESC, "createDate"));
-				break;
+				entityList = boardRepository.findByBoardWriterContaining(
+					searchWord, 
+					PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "boardNum")));
+					break;
 			case "boardContent":
-			entityList = boardRepository.findByBoardContentContaining(searchWord, Sort.by(Sort.Direction.DESC, "createDate"));
-				break;
+				entityList = boardRepository.findByBoardContentContaining(
+					searchWord, 
+					PageRequest.of(page, pageLimit, Sort.by(Sort.Direction.DESC, "boardNum")));
+					break;
 		}
+		// System.out.println("글 내용(getContent): " + entityList.getContent());
+		// System.out.println("글 개수(getTotalElements): " + entityList.getTotalElements());
+		// System.out.println("요청한 페이지 넘버(getNumber): " + entityList.getNumber());
+		// System.out.println("총 페이지 수(geTotalPages): " + entityList.getTotalPages());
+		// System.out.println("한 페이지 당 글 개수(getSize==pageLimit): " + entityList.getSize());
+		// System.out.println("이전페이지 존재여부(hasPrevious): " + entityList.hasPrevious());
+		// System.out.println("다음페이지 존재여부(hasNext): " + entityList.hasNext());
+		// System.out.println("첫페이지 여부(isFirst): " + entityList.isFirst());
+		// System.out.println("마지막 페이지 여부(isLast): " + entityList.isLast());
 
 		// List<BoardEntity> entityList = boardRepository.findAll(Sort.by(Sort.Direction.DESC, "createDate"));
-		List<BoardDTO> dtoList = new ArrayList<>();
 		
 		// entity를 dto로 변환하여 List에 담는 작업
-		entityList.forEach((entity) -> dtoList.add(BoardDTO.toDTO(entity)));
+		// entityList.forEach((entity) -> dtoList.add(BoardDTO.toDTO(entity)));
+
+		Page<BoardDTO> dtoList = null;
+		
+		// 앞단으로 가져갈 내용만 추려서 생성
+		dtoList = entityList.map(board -> 
+			new BoardDTO(
+						board.getBoardNum()
+						, board.getBoardWriter()
+						, board.getBoardTitle()
+						, board.getHitCount()
+						, board.getCreateDate()
+						, board.getOriginalFileName()
+						)
+		);
+
 		return dtoList;
 	}
 
@@ -59,7 +101,6 @@ public class BoardService {
 	 * @param boardDTO
 	 */
 	public void insertBoard(BoardDTO boardDTO) {
-		boardDTO.setBoardWriter("강하늘");
 
 		log.info("저장 경로: {}", uploadPath);
 
@@ -189,5 +230,15 @@ public class BoardService {
 			BoardEntity boardEntity = entity.get();
 			boardEntity.setHitCount(boardEntity.getHitCount() + 1);
 		}
+	}
+
+	@Transactional
+	public int increaseFavoriteCount(Long boardNum) {
+		BoardEntity boardEntity = boardRepository.findById(boardNum).get();
+		
+		boardEntity.setFavoriteCount(boardEntity.getFavoriteCount() + 1);
+
+		return boardEntity.getFavoriteCount();
+		
 	}
 }

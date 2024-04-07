@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 정보 출력</title>
+    <script th:src="@{/script/jquery-3.7.1.min.js}"></script>
+    <script>
+        $(function(){
+            $("#insertReviewBtn").on('click', insertReview);
+            init();
+        });
+
+        function init(){
+            let movieNum = $('#movieNum').val();
+            $.ajax({
+                url : "/review/reviewAll"
+                , method: "GET"
+                , data : {"movieNum":movieNum}
+                , success : output
+            });
+        };
+        function output(resp){
+            let data = '';
+            let scoreSum = 0;
+            $.each(resp, function(index, item){
+                let reviewerName = item.reviewerName;
+                let reviewText = item.reviewText;
+                let score = item.score;
+                let reviewDate = item.reviewDate;
+
+                data = `
+                            <tr>
+                                <td>${reviewerName}</td>
+                                <td>${reviewText}</td>
+                                <td>${score}</td>
+                                <td>${reviewDate}</td>
+                            </tr>
+                    `;
+
+                $('.review-section').append(data);
+                scoreSum += score;
+            });
+
+            console.log(scoreSum / resp.length);
+            $('#scoreAvg').text(scoreSum / resp.length);
+        };
+
+        function insertReview(){
+            let movieNum = $('#movieNum').val();
+            let reviewerName = $('#reviewerName').val();
+            let reviewText = $('#reviewText').val();
+            let score = $('#score').val();
+
+            if(reviewText.trim().length < 10) {
+                alert('리뷰 내용이 너무 짧습니다.');
+                return;
+            };
+
+            let sendData = {"movieNum":movieNum
+                            ,"reviewerName":reviewerName
+                            , "reviewText":reviewText
+                            , "score":score};
+
+            $.ajax({
+                url : "/review/insertReview"
+                , method : "POST"
+                , data : sendData
+                , success : function(resp) {
+                    let reviewerName = resp.reviewerName;
+                    let reviewText = resp.reviewText;
+                    let score = resp.score;
+                    let reviewDate = resp.reviewDate;
+
+                    let receivedData = `
+                            <tr>
+                                <td>${reviewerName}</td>
+                                <td>${reviewText}</td>
+                                <td class=score>${score}</td>
+                                <td>${reviewDate}</td>
+                            </tr>
+                    `;
+
+                    $('.review-section').prepend(receivedData);
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <input type="hidden" id="movieNum" th:value="${movie.movieNum}">
+    <h1>[<span th:text="${movie.movieName}"></span>]에 대한 정보입니다.</h1>
+    <h2>장르: <span th:text="${movie.genre}"></span></h2>
+
+    <p>영화 설명: <span th:text="${movie.movieSummary}"></span></p>
+
+    <a th:href="@{/movie/updateMovie(movieNum=${movie.movieNum})}">영화 정보 수정하기</a>
+
+    <h2>관객 평점: <span id="scoreAvg"></span></h2>
+
+    <h1>[<span th:text="${movie.movieName}"></span>] 관객 리뷰</h1>
+    
+    <div>
+        <table border="1" class="review-section">
+
+        </table>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="reviewInsert">
+        <input type="text" name="reviewerName" id="reviewerName" placeholder="닉네임을 입력하세요">
+        <textarea name="reviewText" id="reviewText" cols="20" rows="3"></textarea>
+        <input type="text" name="score" id="score" placeholder="내 평점(0~10)">
+        <input type="button" id="insertReviewBtn" value="등록하기">
+    </div>
+</body>
+</html>

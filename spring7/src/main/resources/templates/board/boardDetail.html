@@ -1,12 +1,200 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 보기 화면</title>
     <link rel="stylesheet" th:href="@{/css/detail.css}">
+    <script th:src="@{/script/jquery-3.7.1.min.js}"></script>
+    <script>
+        $(function(){
+            $("#replyBtn").on('click', replyWrite);
+            init();
+            $("#likeBtn").on('click', increaseLikeBtn);
+        });
 
+        // 모든 댓글 내용을 읽어오는 함수
+        function init(){
+            let contextPath = $("#contextPath ").val();
+            let boardNum = $("#boardNum").val();
+            $.ajax({
+                url : contextPath + "/reply/replyAll"
+                , method : 'GET'
+                , data : {"boardNum" : boardNum}
+                , success : output
+            })
+        };
+        // 댓글 전체 출력 함수
+        function output(resp){
+            let replyCnt = resp.length;
+            let receivedData = '';
+            $.each(resp, function(index, item){
+                let createDate = item["createDate"];
+
+                let date = createDate.split('T');
+
+                receivedData +=
+                `
+                <tr>
+                    <td class="replyText">${item["replyText"]}</td>
+                    <td class="replyWriter">${item["replyWriter"]}</td>
+                    <td class="replyDate">${date[0]}</td>
+                    <td class="replyBtns">`;
+                // ${#authentication.name}을 jQuery에서 쓸 수 없음 
+                // 타임리프문의 해석은 서버에서 하고, jQuery 해석은 웹브라우저(클라이언트)에서 함
+                // 따라서 혼용해서 사용 지양, 타임리프문은 html에서 사용하도록
+                if($("#loginId").val() == item.replyWriter){
+                    receivedData +=  
+                        `
+                        <input type="button" class="updateBtn btn btn-secondary" value="수정" data-no="${item['replyNum']}">
+                        <input type="button" class="delBtn btn btn-danger" value="삭제" data-no="${item['replyNum']}">
+                        `;
+                };
+
+                receivedData +=
+                `
+                    </td>
+                </tr>
+                `;
+            })
+            $("#replyCnt").text(replyCnt);
+            $("#reply-list").append(receivedData);
+            $(".updateBtn").on('click', updateReply);
+            $(".delBtn").on('click', deleteReply);
+        };
+
+        // 입력된 댓글을 DB에 저장
+        function replyWrite(){
+            let replyText = $("#replyText").val();
+            let boardNum = $("#boardNum").val();
+            let contextPath = $('#contextPath').val();
+            let replyWriter = $("#loginId").val();
+
+            if(replyText.trim().length == 0) {
+                alert("댓글 내용을 입력하세요");
+                $("#replyText").focus();
+                return;
+            }
+
+            let sendData = {
+                "replyWriter":replyWriter,
+                "replyText":replyText,
+                "boardNum":boardNum
+            };
+
+            console.log(JSON.stringify(sendData));
+            // 입력된 댓글 데이터 수신
+            // 요청 데이터: 작성자, 댓글 내용, 게시글 번호
+            $.ajax({
+                // 그냥 대놓고 설정한 contextPath를 넣으면 배포시 삭제되었을 때 일일이 찾아 삭제해야하는 문제 발생가능
+                url : contextPath+"/reply/replyInsert" 
+                , method : "POST"
+                , data : sendData
+                , success : function(resp){
+                    let replyNum = resp["replyNum"];
+                    let replyText = resp["replyText"];
+                    let replyWriter = resp["replyWriter"];
+                    let createDate = resp["createDate"];
+
+                    let date = createDate.split('T');
+                    
+                    let receivedData = 
+                    `
+                    <tr>
+                        <td class="replyText">${replyText}</td>
+                        <td class="replyWriter">${replyWriter}</td>
+                        <td class="replyDate">${date[0]}</td>
+                        <td class="replyBtns">
+                            <input type="button" class="updateBtn btn btn-secondary" value="수정" data-no="${replyNum}">
+                            <input type="button" class="delBtn btn btn-danger" value="삭제" data-no="${replyNum}">
+                        </td>
+                    </tr>
+                    `;
+
+                    $("#reply-list").append(receivedData);
+
+                    $("#replyText").val('');
+
+                    $(".updateBtn").on('click', updateReply);
+                    $(".delBtn").on('click', deleteReply);
+                }
+            });
+        };
+        function updateReply() {
+            let update = $(this);
+
+            $.ajax({
+                url : "/reply/replyOne"
+                , method : "GET"
+                , data : {"replyNum":update.attr('data-no')}
+                , success : function(resp) {
+                    let replyText = resp["replyText"];
+                    // console.log(replyText);
+
+                    $("#replyText").val(replyText);
+
+                    $('#replyBtn').attr('type', "hidden");
+                    $('#replyUpdateBtn').attr('type', "button");
+
+                    $('#replyUpdateBtn').on('click', function(){
+                        let replyUpdateText = $("#replyText").val();
+                        let replyNum = update.attr('data-no');
+
+                        $.ajax({
+                            url : "/reply/updateReply"
+                            , method : "GET"
+                            , data : {"replyText":replyUpdateText, "replyNum":replyNum}
+                            , success : function(resp) {
+                                let replyText = resp.replyText;
+
+                                update.parent().prev().prev().prev().text(replyText);
+                                $("#replyText").val('');
+                            }
+                        })
+                    })
+                }
+            })
+        };
+
+        function deleteReply() {
+            let contextPath = $("#contextPath").val();
+            let del = $(this);
+            // alert(replyNum);
+            if(!confirm("정말 삭제하시겠습니까?")) return;
+
+                ax({
+                url : contextPath + "/reply/replyDelete"
+                , method : 'GET'
+                , data : {"replyNum" : del.attr('data-no')}
+                , success : function(resp){
+                    if(resp){
+                        del.parent().parent().remove();
+                        alert("삭제 완료")
+                    }
+                    else {
+                        alert("삭제 실패")
+                    }
+                }
+            })
+        }
+
+        // 좋아요 버튼
+        function increaseLikeBtn(){
+            let boardNum = $("#boardNum").val();
+            let contextPath = $("#contextPath").val();
+
+            $.ajax({
+                url : contextPath + "/board/increaseFavoriteCount"
+                , method: "GET"
+                , data : {"boardNum":boardNum}
+                , success : function(resp){
+                    $("#favoriteCount").text(resp);
+                }
+            })
+        }
+    </script>
 </head>
 
 <body>
@@ -17,62 +205,90 @@
         </div>
     </div> <!-- .container 끝 -->
 
+    <div class="cnt">
+            <a id="likeBtn" ><img th:src="@{/images/heartbtn2.png}" alt="heartBtn1" height="35px"></a>
+            좋아요 <span id="favoriteCount" th:text="${board.favoriteCount}"></span> &nbsp;
+            조회수 <span th:text="${board.hitCount}"></span>
+    </div>
+
     <!-- 글보기 -->
     <div class="content">
-        <form th:action="@{/board/boardWrite}" method="post">
-            <table border="1">
-                <tr>
-                    <th>작성자</th>
-                    <td>
-                        <span th:text="${board.boardWriter}">작성자</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>글제목</th>
-                    <td>
-                        <span th:text="${board.boardTitle}">글제목</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>작성일</th>
-                    <td>
-                        <span th:text="${#temporals.format(board.createDate, 'yyyy-MM-dd hh:mm:ss')}">작성일</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>수정일</th>
-                    <td>
-                        <span th:text="${#temporals.format(board.updateDate, 'yyyy-MM-dd hh:mm:ss')}">수정일</span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>글내용</th>
-                    <td>
-                        <pre>[[ ${board.boardContent} ]]</pre>
-                    </td>
-                </tr>
-                <tr>
-                    <th>첨부파일</th>
-                    <td>
-                        <span th:if="${board.originalFileName != null}">
-                            <a th:href="@{/board/download(boardNum=${board.boardNum})}" th:text="${board.originalFileName}"></a>
-                        </span>
-                    </td>
-                </tr>
+        <input type="hidden" id="boardNum" th:value="${board.boardNum}">
+        <input type="hidden" id="contextPath" th:value="${contextPath}">
+        <input type="hidden" id="loginId" th:value="${#authentication.name}">
+        <table border="1">
+            <tr>
+                <th>작성자</th>
+                <td>
+                    <span th:text="${board.boardWriter}">작성자</span>
+                </td>
+            </tr>
+            <tr>
+                <th>글제목</th>
+                <td>
+                    <span th:text="${board.boardTitle}">글제목</span>
+                </td>
+            </tr>
+            <tr>
+                <th>작성일</th>
+                <td>
+                    <span th:text="${#temporals.format(board.createDate, 'yyyy-MM-dd hh:mm:ss')}">작성일</span>
+                </td>
+            </tr>
+            <tr>
+                <th>수정일</th>
+                <td>
+                    <span th:text="${#temporals.format(board.updateDate, 'yyyy-MM-dd hh:mm:ss')}">수정일</span>
+                </td>
+            </tr>
+            <tr>
+                <th>글내용</th>
+                <td>
+                    <pre>[[ ${board.boardContent} ]]</pre>
+                </td>
+            </tr>
+            <tr>
+                <th>첨부파일</th>
+                <td>
+                    <span th:if="${board.originalFileName != null}">
+                        <a th:href="@{/board/download(boardNum=${board.boardNum})}" th:text="${board.originalFileName}"></a>
+                    </span>
+                </td>
+            </tr>
 
-                <tr>
-                    <th colspan="2">
-                        <!--수정/삭제할 글의 PK도 함께 보내기-->
-                        <a th:href="@{/board/boardUpdate(boardNum=${board.boardNum},searchItem=${searchItem},searchWord=${searchWord} )}" class="btn btn-primary">수 정</a>
+            <tr>
+                <th colspan="2">
+                    <!--글 수정/삭제 버튼은 글쓴 사람이 로그인한 사람과 동일한 경우에만 나타나도록 함-->
+                    <!--수정/삭제할 글의 PK도 함께 보내기-->
+                    <th:block th:if="${board.boardWriter == #authentication.name}">
+                        <a th:href="@{/board/boardUpdate(boardNum=${board.boardNum},searchItem=${searchItem},searchWord=${searchWord})}" class="btn btn-primary">수 정</a>
                         <a th:href="@{/board/boardDelete(boardNum=${board.boardNum},searchItem=${searchItem},searchWord=${searchWord})}" class="btn btn-danger">삭 제</a>
-                        <a th:href="@{/board/boardList(searchItem=${searchItem},searchWord=${searchWord})}" class="btn btn-info">목 록</a>
-                    </th>
+                    </th:block>
+                    <a th:href="@{/board/boardList(searchItem=${searchItem},searchWord=${searchWord})}" class="btn btn-info">목 록</a>
+                </th>
 
-                </tr>
+            </tr>
 
-            </table>
+        </table>
 
-        </form>
+        <!--댓글 입력: 로그인한 사람만 가능하도록-->
+        <div class="replyCnt">
+            댓글 수: <span id="replyCnt"></span>
+        </div>
+        <div class="reply-write">
+            <input type="text" id="replyText" placeholder="댓글 내용 입력">
+            <input type="button" id="replyBtn" class="btn btn-primary" value="댓글작성">
+            <input type="hidden" id="replyUpdateBtn" class="btn btn-primary" value="댓글수정">
+        </div>
+        <!--댓글 목록-->
+        <table id="reply-list">
+            <tr>
+                <th id="replyText">댓글내용</th>
+                <th>작성자</th>
+                <th>작성일</th>
+                <th></th>
+            </tr>
+        </table>
     </div>
 
 </body>

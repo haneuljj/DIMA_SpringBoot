@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 리뷰 게시판</title>
+    <script th:src="@{/script/jquery-3.7.1.min.js}"></script>
+    <script>
+        $(function(){
+            $("#submitGenre").on('click', selectGenre);
+        });
+
+        function selectGenre(){
+            let genre = $('#genre').val();
+
+            $.ajax({
+                url : "/getGenreList"
+                , method : "POST"
+                , data : {"searchGenre":genre}
+                , success : function(resp){
+                    console.log(resp);
+                    let data =  `
+                                <tr>
+                                    <th>번호</th>
+                                    <th>장르</th>
+                                    <th>제목</th>
+                                    <th>리뷰 수</th>
+                                </tr>
+                        `;
+                    $.each(resp, function(index, item){
+                        let movieNum = item["movieNum"];
+                        let genre = item["genre"];
+                        let movieName = item["movieName"];
+                        let reviewCount = item["reviewEntity"].length;
+                    
+                        data += `
+                            <tr>
+                                <td>${movieNum}</td>
+                                <td>${genre}</td>
+                                <td>
+                                    <a href="/movie/movieDetail?movieNum=${movieNum}">${movieName}</a>
+                                </td>
+                                <td>${reviewCount}</td>
+                            </tr>
+                        `;
+                    })
+                    //console.log(data);
+                    $("#searchGenreList").html(data);
+                }
+            });
+            
+        };
+    </script>
+</head>
+<body>
+    <h1>[ 영화 리뷰 게시판 ]</h1>
+    
+    <div>
+        정렬 ▷
+        <span><a th:href="@{/sortList(orderBy=movieDate)}">최신 등록순</a></span>
+        <span><a th:href="@{/sortList(orderBy=reviewCount)}">리뷰 많은순</a></span>
+    </div>
+    <br>
+
+    <h2 th:if="${#lists.isEmpty(list)}">영화정보가 없습니다.</h2>
+
+    <div class="content" th:unless="${#lists.isEmpty(list)}">
+        <table border="1" id="searchGenreList">
+            <tr>
+                <th>번호</th>
+                <th>장르</th>
+                <th>제목</th>
+                <th>리뷰 수</th>
+            </tr>
+            <tr th:each="movie : ${list}" >
+                <td th:text="${movie.movieNum}"></td>
+                <td th:text="${movie.genre}"></td>
+                <td>
+                    <a th:href="@{/movie/movieDetail(movieNum=${movie.movieNum})}" th:text="${movie.movieName}"></a>
+                </td>
+                <td th:text="${#lists.size(movie.reviewEntity)}"></td>
+            </tr>
+        </table>
+    </div>
+
+    <br>
+    <br>
+
+    <div>
+        내가 찾는 영화가 없다면?
+        <span><a th:href="@{/movie/insertMovie}">영화 등록하기</a></span>
+    </div>
+    <br>
+    <div>
+        장르 골라보기
+        <select name="searchGenre" id="genre" th:value="${searchGenre}">
+            <option value="코미디" th:selected="${searchGenre}=='코미디'">코미디</option>
+            <option value="애니메이션" th:selected="${searchGenre}=='애니메이션'">애니메이션</option>
+            <option value="액션" th:selected="${searchGenre}=='액션'">액션</option>
+        </select>
+        <input type="button" id="submitGenre" value="골라보기">
+    </div>
+</body>
+</html>

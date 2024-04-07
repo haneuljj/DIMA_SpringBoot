@@ -8,6 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.FileCopyUtils;
@@ -16,13 +19,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import net.kdigital.spring7.dto.BoardDTO;
 import net.kdigital.spring7.service.BoardService;
+import net.kdigital.spring7.util.PageNavigator;
 
 @Slf4j
 @Controller
@@ -38,24 +44,40 @@ public class BoardController {
 	// 파일의 저장경로 얻어오기
 	@Value("${spring.servlet.multipart.location}")
 	String uploadPath;
+
+	// 한 페이지당 글의 최대 개수값 가져오기
+	@Value("${user.board.pageLimit}")
+	int pageLimit;
 	
 	/**
 	 * 글 목록 요청 
-	 * 1) index(첫화면)에서 넘어올 경우: searchWord, searchItem없이 넘어옴
+	 * 1) index(첫화면)에서 넘어올 경우: searchWord, searchItem없으므로 기본값 세팅
+	 * 	  1페이지를 요청한 것임
 	 * 2) 목록상황에서 검색하여 넘어올 경우: searchWord, searchItem 값 가지고 넘어옴
+	 * 	  1페이지 요청
+	 * 3) 목록 화면 하단에서 페이지를 선택할 경우 선택한 값을 사용
 	 * @return
 	 */
 	@GetMapping("/boardList")
 	public String boardList(
+		@PageableDefault(page=1) Pageable pageable, // 페이징을 해주는 객체, 요청한 페이지가 없으면 1페이지로 요청됨
 		@RequestParam(name = "searchItem", defaultValue = "boardTitle") String searchItem,
 		@RequestParam(name = "searchWord", defaultValue = "") String searchWord,
 		Model model) {
 
-		List<BoardDTO> dtoList =  boardService.selectAll(searchItem, searchWord);
+		//List<BoardDTO> dtoList =  boardService.selectAll(searchItem, searchWord);
+		Page<BoardDTO> dtoList = boardService.selectAll(pageable, searchItem, searchWord);
+
+		// 페이지 번호 자동계산 해주는 PageNavigator 객체 생성
+		int totalPages = (int)dtoList.getTotalPages();
+		int page = pageable.getPageNumber();              
+
+		PageNavigator navi = new PageNavigator(pageLimit, page, totalPages);
 
 		model.addAttribute("list", dtoList);
 		model.addAttribute("searchItem", searchItem);
 		model.addAttribute("searchWord", searchWord);
+		model.addAttribute("navi", navi);
 
 		return "board/boardList";
 	}
@@ -93,8 +115,12 @@ public class BoardController {
 		@RequestParam(name = "boardNum") Long boardNum,
 		@RequestParam(name = "searchItem") String searchItem,
 		@RequestParam(name = "searchWord") String searchWord,
+		HttpServletRequest request,
 		Model model
 	) {
+
+		String contextPath = request.getContextPath();
+		
 		//selectOne에 조회수 증가 함수 내용 포함시키면 안됨; 글 수정시에도 호출되기때문에 조회가 아닌 수정시에도 조회수 증가됨
 		BoardDTO boardDTO = boardService.selectOne(boardNum);
 		
@@ -103,6 +129,7 @@ public class BoardController {
 		model.addAttribute("board", boardDTO);
 		model.addAttribute("searchItem", searchItem);
 		model.addAttribute("searchWord", searchWord);
+		model.addAttribute("contextPath", contextPath);
 
 		return "board/boardDetail";
 	}
@@ -226,4 +253,14 @@ public class BoardController {
 		return null;
 	}
 	
+	@GetMapping("/increaseFavoriteCount")
+	@ResponseBody
+	public int increaseFavoriteCount(
+		@RequestParam(name = "boardNum") Long boardNum){
+
+		log.info("============ increaseFavoriteCount{}", boardNum);
+		int resultCount = boardService.increaseFavoriteCount(boardNum);
+
+		return resultCount;
+	}
 }

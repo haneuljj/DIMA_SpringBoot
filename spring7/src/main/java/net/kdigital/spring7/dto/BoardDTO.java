@@ -18,7 +18,6 @@ import net.kdigital.spring7.entity.BoardEntity;
 @Getter
 @ToString
 @Builder
-
 public class BoardDTO {
 	private Long boardNum;
 	private String boardWriter;
@@ -33,6 +32,17 @@ public class BoardDTO {
 	private MultipartFile uploadFile;
 	private String originalFileName; // 원본 파일의 파일명
 	private String savedFileName; // DB와 하드에 저장될 파일명
+
+	// 페이징을 위한 생성자
+	public BoardDTO(Long boardNum, String boardWriter, String boardTitle, int hitCount, LocalDateTime createDate, String originalFilName) {
+		super();	
+		this.boardNum = boardNum;
+		this.boardWriter = boardWriter;
+		this.boardTitle = boardTitle;
+		this.hitCount = hitCount;
+		this.createDate = createDate;
+		this.originalFileName = originalFilName;
+	}
 
 // Entity --> DTO 반환 
 	public static BoardDTO toDTO(BoardEntity boardEntity) {

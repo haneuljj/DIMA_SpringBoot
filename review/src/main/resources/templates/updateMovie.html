@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 정보 수정</title>
+    <script th:src="@{/script/jquery-3.7.1.min.js}"></script>
+    <script>
+        $(function(){
+            $("#deleteBtn").on('click', deleteMovie);
+        });
+
+        function deleteMovie(){
+            if(confirm('삭제된 내용은 복구할 수 없습니다. 계속하시겠습니까?')) {
+                let movieNum = $("#movieNum").val();
+
+                $.ajax({
+                    url : "/movie/deleteMovie"
+                    , method : "GET"
+                    , data : {"movieNum":movieNum}
+                    , success : function(resp){
+                        location.replace(resp) // '/'
+                    }
+                })
+            } else {
+                alert('삭제가 취소되었습니다.');
+                return;
+            };
+        };
+    </script>
+</head>
+<body>
+    <h1>[ 영화 정보 수정 ]</h1>
+    <input type="hidden" id="movieNum" th:value="${movie.movieNum}">
+    <div class="container">
+        <form th:action="@{/movie/updateMovie(movieNum=${movie.movieNum})}" method="post">
+            <table border="1">
+                <tr>
+                    <td>
+                        <select name="genre" th:value="${movie.genre}">
+                            <option value="코미디" th:selected="${movie.genre}=='코미디'">코미디</option>
+                            <option value="애니메이션" th:selected="${movie.genre}=='애니메이션'">애니메이션</option>
+                            <option value="액션" th:selected="${movie.genre}=='액션'">액션</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="movieName" id="movieName" th:value="${movie.movieName}">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <textarea name="movieSummary" id="movieSummary" cols="30" rows="10" th:text="${movie.movieSummary}"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="submit" id="updateBtn" value="수정하기">
+                        <input type="button" id="deleteBtn" value="삭제하기">
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+</html>
